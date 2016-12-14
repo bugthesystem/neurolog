@@ -1,6 +1,8 @@
 package neurolog
 
 import (
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -22,14 +24,14 @@ type NeuralNetwork struct {
 
 // Options ...
 type Options struct {
-	Host         string
+	RedisHost    string
 	Password     string
 	Key          string
 	Name         string
 	Type         string
 	Inputs       []string
 	Outputs      []string
-	HiddenLayers []string
+	HiddenLayers []int
 	DatasetSize  int
 	TestsetSize  int
 	Normalize    bool
@@ -52,26 +54,28 @@ func New(opts Options) NeuralNetwork {
 
 	initRedisConnPool(&neuralNetwork, opts)
 
-	//TODO
-
 	return neuralNetwork
 }
 
-func info(neurolog NeuralNetwork) map[string]string {
-	result := map[string]string{}
+//Info ... Returns nn info
+func (neurolog NeuralNetwork) Info() interface{} {
 	c := neurolog._pool.Get()
 	defer c.Close()
 
+	fmt.Println(neurolog._opts.Name)
 	n, err := c.Do("nr.info", neurolog._opts.Name)
 	if err != nil {
+		fmt.Println(err)
 		//TODO: handle error return from c.Do or type conversion error.
 	}
-	//dict(zip(result[0::2], result[1::2]))
-	return result
+	//TODO: zip result
+	fmt.Println(reflect.TypeOf(n))
+	fmt.Println(n)
+	return n
 }
 
 func initRedisConnPool(neuralNetwork *NeuralNetwork, opts Options) {
-	if opts.Host == "" {
+	if opts.RedisHost == "" {
 		panic("Missing redis `host`")
 	}
 
@@ -83,7 +87,7 @@ func newPool(opts Options) *redis.Pool {
 		MaxIdle:   redisPoolMaxIdle,
 		MaxActive: redisPoolMaxActive,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", opts.Host)
+			c, err := redis.Dial("tcp", opts.RedisHost)
 			if err != nil {
 				return nil, err
 			}

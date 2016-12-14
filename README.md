@@ -11,7 +11,7 @@ docker built -t neurolog .
 
 ** Run container**
 ```sh
-docker run -d --name neural-redis neurolog
+docker run -d --name neural-redis -p 6379:6379 neurolog
 ```
 
 **To Connect**
@@ -19,7 +19,25 @@ docker run -d --name neural-redis neurolog
 docker run -it --link neural-redis:neurolog --rm neurolog redis-cli -h neurolog -p 6379
 ```
 
-**Usage**
+**Usage (Preview)**
 ```go
-//TODO:
+import "github.com/ziyasal/neurolog/neurolog"
+```
+
+```go
+    options := neurolog.Options{
+		Name:         "titanic",
+		Type:         "classifier",
+		Inputs:       []string{},
+		Outputs:      []string{},
+		HiddenLayers: []int{5},
+		DatasetSize:  1000,
+		TestsetSize:  500,
+		RedisHost:    "localhost:6379",
+	}
+
+	nn := neurolog.New(options)
+	info := nn.Info()
+
+	fmt.Println(info)
 ```
