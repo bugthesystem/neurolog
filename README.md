@@ -2,7 +2,7 @@ Neurolog
 ================
 > A Go-lang interface to access `neural-redis`
 
-**Build Docker image**
+**Build Docker image**  
 It contains `redis-server` and `neural-redis` pre-configured
 
 ```sh
