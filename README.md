@@ -1,6 +1,6 @@
 Neurolog
 ================
-A Go-lang interface to access `neural-redis`
+> A Go-lang interface to access `neural-redis`
 
 **Build Docker image**
 It contains `redis-server` and `neural-redis` pre-configured
@@ -9,12 +9,12 @@ It contains `redis-server` and `neural-redis` pre-configured
 docker built -t neurolog .
 ```
 
-** Run container**
+**To run container**
 ```sh
 docker run -d --name neural-redis -p 6379:6379 neurolog
 ```
 
-**To Connect**
+**To connect using `redis-cli`**
 ```sh
 docker run -it --link neural-redis:neurolog --rm neurolog redis-cli -h neurolog -p 6379
 ```
