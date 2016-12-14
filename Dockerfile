@@ -30,11 +30,10 @@ RUN buildDeps='git gcc libc6-dev make'; \
 	&& make -C /usr/src/redis \
 	&& make -C /usr/src/redis install \
 	&& rm -r /usr/src/redis \
-    && cd tmp \
-    && git clone https://github.com/antirez/neural-redis.git \
-    && cd neural-redis \
-    && make \
-    && ls \
+    && mkdir -p /usr/src/neuralredis \
+    && git clone https://github.com/antirez/neural-redis.git /usr/src/neuralredis \
+    && make -C /usr/src/neuralredis generic \
+    && ls /usr/src/neuralredis \
 	&& apt-get purge -y --auto-remove $buildDeps
 
 RUN mkdir /data && chown redis:redis /data
@@ -49,4 +48,4 @@ EXPOSE 6379
 # CMD [ "redis-server" ]
     
 
-CMD [ "redis-server", "--loadmodule", "/tmp/neural-redis/neuralredis.so" , "--protected-mode","no"]
+CMD [ "redis-server", "--loadmodule", "/usr/src/neuralredis/neuralredis.so" , "--protected-mode","no"]

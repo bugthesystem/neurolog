@@ -40,6 +40,10 @@ type Options struct {
 
 // New ... Creates new neuralNetwork using options
 func New(opts Options) NeuralNetwork {
+	if opts.Prefix == "" {
+		opts.Prefix = "nn:"
+	}
+
 	neuralNetwork := NeuralNetwork{_opts: opts}
 
 	if opts.RedisClient != nil {
@@ -51,6 +55,19 @@ func New(opts Options) NeuralNetwork {
 	//TODO
 
 	return neuralNetwork
+}
+
+func info(neurolog NeuralNetwork) map[string]string {
+	result := map[string]string{}
+	c := neurolog._pool.Get()
+	defer c.Close()
+
+	n, err := c.Do("nr.info", neurolog._opts.Name)
+	if err != nil {
+		//TODO: handle error return from c.Do or type conversion error.
+	}
+	//dict(zip(result[0::2], result[1::2]))
+	return result
 }
 
 func initRedisConnPool(neuralNetwork *NeuralNetwork, opts Options) {
