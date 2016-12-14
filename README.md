@@ -25,19 +25,19 @@ import "github.com/ziyasal/neurolog/neurolog"
 ```
 
 ```go
-    options := neurolog.Options{
-		Name:         "titanic",
-		Type:         "classifier",
-		Inputs:       []string{},
-		Outputs:      []string{},
-		HiddenLayers: []int{5},
-		DatasetSize:  1000,
-		TestsetSize:  500,
-		RedisHost:    "localhost:6379",
-	}
+options := neurolog.Options{
+	Name:         "titanic",
+	Type:         "classifier",
+	Inputs:       []string{},
+	Outputs:      []string{},
+	HiddenLayers: []int{5},
+	DatasetSize:  1000,
+	TestsetSize:  500,
+	RedisHost:    "localhost:6379",
+}
 
-	nn := neurolog.New(options)
-	info := nn.Info()
+nn := neurolog.New(options)
+info := nn.Info()
 
-	fmt.Println(info)
+fmt.Println(info)
 ```
