@@ -16,9 +16,6 @@ const (
 //NeuralNetwork ... Neural-Redis neuralNetwork
 type NeuralNetwork struct {
 	_opts  Options
-	_key   string
-	_flags map[string]string
-	_rooms map[string]bool
 	_pool  *redis.Pool
 }
 
