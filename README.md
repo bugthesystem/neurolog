@@ -1,5 +1,5 @@
 # Access from CLI
 
 ```sh
-docker run -it --link some-redis:hasan --rm hasan redis-cli -h hasan -p 6379
+docker run -it --link some-redis:neurolog --rm neurolog redis-cli -h neurolog -p 6379
 ```
