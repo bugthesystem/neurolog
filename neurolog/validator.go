@@ -2,7 +2,7 @@ package neurolog
 
 import "github.com/deckarep/golang-set"
 
-func  _validateInput(network NeuralNetwork, input map[string]int64) {
+func _validateInput(network NeuralNetwork, input map[string]int64) {
 	keys := make([]interface{}, 0, len(input))
 	for k := range input {
 		keys = append(keys, k)
@@ -19,7 +19,7 @@ func  _validateInput(network NeuralNetwork, input map[string]int64) {
 	}
 }
 
-func  _validateOutput(network NeuralNetwork,output map[string]int64) {
+func _validateOutput(network NeuralNetwork, output map[string]int64) {
 	keys := make([]interface{}, 0, len(output))
 	for k := range output {
 		keys = append(keys, k)

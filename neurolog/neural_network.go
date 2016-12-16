@@ -3,6 +3,7 @@ package neurolog
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -54,6 +55,10 @@ func New(opts Options) NeuralNetwork {
 
 	initRedisConnPool(&neuralNetwork, opts)
 
+	if !neuralNetwork.IsCreated() {
+		neuralNetwork.Create()
+	}
+
 	return neuralNetwork
 }
 
@@ -63,61 +68,242 @@ func (network NeuralNetwork) Info() interface{} {
 	defer c.Close()
 
 	fmt.Println(network._opts.Name)
-	n, err := c.Do("nr.info", network._opts.Name)
+	result, err := c.Do("nr.info", network._opts.Name)
 	if err != nil {
 		fmt.Println(err)
 		//TODO: handle error return from c.Do or type conversion error.
 	}
+
 	//TODO: zip result
-	fmt.Println(reflect.TypeOf(n))
-	fmt.Println(n)
-	return n
+	fmt.Println(reflect.TypeOf(result))
+	fmt.Println(result)
+
+	//dict(zip(result[0::2], result[1::2]))
+	return map[string]string{}
+}
+
+//Classify ...  Run the network returning the classified class
+func (network NeuralNetwork) Classify(input map[string]int64) interface{} {
+
+	_validateInput(network, input)
+
+	args := []string{network._opts.Name}
+
+	for i := 0; i < len(network._opts.Inputs); i++ {
+		args = append(args, network._opts.Inputs[i])
+	}
+
+	fmt.Println(args)
+
+	c := network._pool.Get()
+	defer c.Close()
+
+	result, err := c.Do("nr.class", args)
+	if err != nil {
+		fmt.Println(err)
+		//TODO: handle error return from c.Do or type conversion error.
+	}
+
+	if str, ok := result.(string); ok {
+		idx, _ := strconv.ParseInt(string(str), 10, 64)
+		return network._opts.Outputs[idx]
+	} else {
+		return nil
+	}
+
 }
 
 //Run ... Run the network returning a dict result
 func (network NeuralNetwork) Run(input map[string]int64) map[string]string {
 
-	_validateInput(input)
+	_validateInput(network, input)
 
-	inputLen := len(network._opts.Inputs)
-	args := make([]string, inputLen+1)
-	args[0] = network._opts.Name
+	args := []string{network._opts.Name}
 
-	for i := 0; i < inputLen; i++ {
-		args[i+1] = network._opts.Inputs[i]
+	for i := 0; i < len(network._opts.Inputs); i++ {
+		args = append(args, network._opts.Inputs[i])
 	}
 
 	fmt.Println(args)
+	c := network._pool.Get()
+	defer c.Close()
+
+	result, err := c.Do("nr.run", args)
+	if err != nil {
+		fmt.Println(err)
+		//TODO: handle error return from c.Do or type conversion error.
+	}
+
+	fmt.Println(result)
+
+	//dict(zip(self.outputs, result))
 	return map[string]string{}
 }
 
-func (network NeuralNetwork) ObserveTrain(input map[string]int64, output map[string]int64) bool {
+//ObserveTrain ...  Add a data sample into the training dataset
+func (network NeuralNetwork) ObserveTrain(input map[string]int64, output map[string]int64) interface{} {
 	return network._observe(input, output, "train")
 }
 
-func (network NeuralNetwork) ObserveTest(input map[string]int64, output map[string]int64) bool {
+//ObserveTest ...  Add a data sample into the testing dataset
+func (network NeuralNetwork) ObserveTest(input map[string]int64, output map[string]int64) interface{} {
 	return network._observe(input, output, "test")
 }
 
-func (network NeuralNetwork) _observe(input map[string]int64, output map[string]int64, mode string) bool {
-	return true
+//Add a data sample into the training or testing dataset
+//Mode can be `train` or `test`
+func (network NeuralNetwork) _observe(input map[string]int64, output map[string]int64, mode string) interface{} {
+
+	_validateInput(network, input)
+	_validateOutput(network, output)
+
+	args := []string{network._opts.Name}
+
+	for i := 0; i < len(network._opts.Inputs); i++ {
+		args = append(args, network._opts.Inputs[i])
+	}
+
+	args = append(args, "->")
+
+	if network._opts.Type == "regressor" {
+		for i := 0; i < len(network._opts.Outputs); i++ {
+			args = append(args, network._opts.Inputs[i])
+		}
+	} else {
+		clsType := 0
+		for i, name := range network._opts.Outputs {
+
+			if _, ok := output[name]; ok {
+				clsType = i
+				break
+			}
+
+		}
+		args = append(args, string(clsType))
+
+	}
+	args = append(args, mode)
+
+	fmt.Println(args)
+
+	c := network._pool.Get()
+	defer c.Close()
+
+	result, err := c.Do("nr.observe", args)
+	if err != nil {
+		fmt.Println(err)
+		//TODO: handle error return from c.Do or type conversion error.
+	}
+
+	return result
+}
+
+//IsCreated ... Returns true if the neural network is created
+func (network NeuralNetwork) IsCreated() bool {
+	c := network._pool.Get()
+	defer c.Close()
+
+	result, err := c.Do("EXISTS", network._opts.Name)
+	if err != nil {
+		fmt.Println(err)
+		//TODO: handle error return from c.Do or type conversion error.
+	}
+
+	if str, ok := result.(string); ok {
+		return string(str) == "1"
+	} else {
+		return false
+	}
+
+}
+
+//Create ... Create the neural network
+func (network NeuralNetwork) Create() interface{} {
+
+	args := []string{network._opts.Name, network._opts.Type, string(len(network._opts.Inputs))}
+	for _, el := range network._opts.HiddenLayers {
+		args = append(args, string(el))
+	}
+
+	args = append(args, "->")
+	args = append(args, string(len(network._opts.Outputs)))
+
+	if network._opts.Normalize {
+		args = append(args, "NORMALIZE")
+	}
+	args = append(args, "DATASET")
+
+	args = append(args, string(network._opts.DatasetSize))
+	args = append(args, "TEST")
+	args = append(args, string(network._opts.TestDatasetSize))
+
+	c := network._pool.Get()
+	defer c.Close()
+	result, err := c.Do("nr.create", args)
+	if err != nil {
+		fmt.Println(err)
+		//TODO: handle error return from c.Do or type conversion error.
+	}
+	fmt.Println(result)
+	return result
+}
+
+//Delete ...  Delete the neural network
+func (network NeuralNetwork) Delete() {
+	c := network._pool.Get()
+	defer c.Close()
+
+	result, err := c.Do("DELETE", network._opts.Name)
+	if err != nil {
+		fmt.Println(err)
+		//TODO: handle error return from c.Do or type conversion error.
+	}
+	fmt.Println(result)
+}
+
+//ReCreate ... Recreate the neural network
+func (network NeuralNetwork) ReCreate() {
+	network.Delete()
+	network.Create()
 }
 
 //Train ... Train
-func (network NeuralNetwork) Train(maxCycles int, maxTime int, autoStop bool, backtrack bool) {
-	//TODO:
+func (network NeuralNetwork) Train(maxCycles int, maxTime int, autoStop bool, backtrack bool) interface{} {
+	args := []string{network._opts.Name}
+
+	if maxCycles != 0 {
+		args = append(args, "MAXCYCLES")
+		args = append(args, string(maxCycles))
+	}
+
+	if maxTime != 0 {
+		args = append(args, "MAXTIME")
+		args = append(args, string(maxTime))
+	}
+
+	if autoStop {
+		args = append(args, "AUTOSTOP")
+	}
+
+	if autoStop {
+		args = append(args, "BACKTRACK")
+	}
+
+	c := network._pool.Get()
+	defer c.Close()
+
+	result, err := c.Do("nr.train", args)
+	if err != nil {
+		fmt.Println(err)
+		//TODO: handle error return from c.Do or type conversion error.
+	}
+	fmt.Println(result)
+	return result
 }
 
 func (network NeuralNetwork) IsTraining() bool {
-	return true
-}
-
-func _validateInput(input map[string]int64) {
-	//TODO:
-}
-
-func _validateOutput(output map[string]string) {
-	//TODO:
+	info := network.Info()
+	return info["training"] == 1
 }
 
 func initRedisConnPool(neuralNetwork *NeuralNetwork, opts Options) {
