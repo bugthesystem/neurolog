@@ -20,24 +20,44 @@ docker run -it --link neural-redis:network --rm network redis-cli -h network -p 
 ```
 
 **Usage (Preview)**
-```go
-import "github.com/ziyasal/network/network"
-```
 
 ```go
-options := network.Options{
-	Name:         "titanic",
-	Type:         "classifier",
-	Inputs:       []string{},
-	Outputs:      []string{},
-	HiddenLayers: []int{5},
-	DatasetSize:  1000,
-	TestDatasetSize:  500,
-	RedisHost:    "localhost:6379",
+package main
+
+import (
+        "fmt"
+        "time"
+	    "github.com/ziyasal/neurolog/neurolog"
+)
+
+
+func main() {
+
+	options := neurolog.Options{
+		Name:            "additions",
+		Type:            "regressor",
+		Inputs:          []string{"number1", "number2"},
+		Outputs:         []string{"result"},
+		HiddenLayers:    []int{3},
+		DatasetSize:     50,
+		TestDatasetSize: 10,
+		RedisHost:       "localhost:6379",
+	}
+
+	network := neurolog.New(options)
+
+    network.ObserveTrain(map[string]int64{"number1":1, "number2":2}, map[string]int64{"result":2})
+    
+    network.Train(0,0,true,true)
+    
+    for network.IsTraining() {
+        fmt.Println("Training")
+        time.Sleep(1)
+    }
+    
+    fmt.Println(network.Run(map[string]int64{"number1":1, "number2":2}))
+
 }
 
-network := network.New(options)
-info := network.Info()
 
-fmt.Println(info)
 ```
