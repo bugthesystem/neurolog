@@ -14,7 +14,7 @@ const (
 	redisPoolMaxActive = 12000 // max number of connections
 )
 
-//NeuralNetwork ... Neural-Redis neuralNetwork
+//NeuralNetwork ... Neural-Redis interface
 type NeuralNetwork struct {
 	_opts  Options
 	_key   string

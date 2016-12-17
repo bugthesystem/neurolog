@@ -19,13 +19,13 @@ type Pair struct {
 func main() {
 
 	options := neurolog.Options{
-		Name:            "titanic",
-		Type:            "classifier",
-		Inputs:          []string{"class1", "class2", "class3", "female", "male", "age", "sibsp", "parch", "fare"},
-		Outputs:         []string{"dead", "alive"},
-		HiddenLayers:    []int{15},
-		DatasetSize:     1000,
-		TestDatasetSize: 500,
+		Name:            "additions",
+		Type:            "regressor",
+		Inputs:          []string{"number1", "number2"},
+		Outputs:         []string{"result"},
+		HiddenLayers:    []int{3},
+		DatasetSize:     50,
+		TestDatasetSize: 10,
 		RedisHost:       "localhost:6379",
 	}
 
