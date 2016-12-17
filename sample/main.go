@@ -32,7 +32,7 @@ func main() {
 	network := neurolog.New(options)
 
 	//Load training data set
-	csvData := loadCsvData()
+	csvData := loadAdditionCsvData()
 
 	trainDataSet := csvData[:90]
 	testDataSet := csvData[90:]
@@ -70,7 +70,7 @@ func main() {
 	fmt.Sprintf("%s prediction errors on %s test items", errors, len(testDataSet))
 }
 
-func loadCsvData() []*Pair {
+func loadAdditionCsvData() []*Pair {
 	pwd, _ := os.Getwd()
 	file, err := os.Open(pwd + "/sample/datasets/addition.csv")
 	if err != nil {
@@ -102,9 +102,7 @@ func loadCsvData() []*Pair {
 			El1: input,
 			El2: output,
 		}
-		println(input)
-		println(output)
-		println(result)
+
 		result = append(result, p)
 	}
 
