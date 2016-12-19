@@ -1,6 +1,6 @@
 Neurolog
 ================
-> A Go-lang interface to access `neural-redis`
+> A Go-lang interface to access [`neural-redis`](https://github.com/antirez/neural-redis)
 
 Documetation on [GoDoc](https://godoc.org/github.com/ziyasal/neurolog/neurolog)
 
