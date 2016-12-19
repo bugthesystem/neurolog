@@ -2,6 +2,8 @@ Neurolog
 ================
 > A Go-lang interface to access `neural-redis`
 
+Documetation on [GoDoc](https://godoc.org/github.com/ziyasal/neurolog/neurolog)
+
 **Build Docker image**  
 It contains `redis-server` and `neural-redis` pre-configured
 
