@@ -11,12 +11,12 @@ docker built -t network .
 
 **To run container**
 ```sh
-docker run -d --name neural-redis -p 6379:6379 network
+docker run -d --name neural-redis -p 6379:6379 neurolog
 ```
 
 **To connect using `redis-cli`**
 ```sh
-docker run -it --link neural-redis:network --rm network redis-cli -h network -p 6379
+docker run -it --link neural-redis:network --rm network redis-cli -h neurolog -p 6379
 ```
 
 **Usage (Preview)**
@@ -37,7 +37,7 @@ func main() {
 		Name:            "additions",
 		Type:            "regressor",
 		Inputs:          []string{"number1", "number2"},
-		Outputs:         []string{"result"},
+		Outputs:         []string{"cmdResult"},
 		HiddenLayers:    []int{3},
 		DatasetSize:     50,
 		TestDatasetSize: 10,
@@ -46,7 +46,7 @@ func main() {
 
 	network := neurolog.New(options)
 
-    network.ObserveTrain(map[string]int64{"number1":1, "number2":2}, map[string]int64{"result":2})
+    network.ObserveTrain(map[string]int64{"number1":1, "number2":2}, map[string]int64{"cmdResult":2})
     
     network.Train(0,0,true,true)
     

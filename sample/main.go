@@ -20,13 +20,16 @@ func main() {
 
 	options := neurolog.Options{
 		Name:            "additions",
-		Type:            "regressor",
+		Type:            "REGRESSOR",
 		Inputs:          []string{"number1", "number2"},
 		Outputs:         []string{"result"},
 		HiddenLayers:    []int{3},
 		DatasetSize:     50,
 		TestDatasetSize: 10,
 		RedisHost:       "localhost:6379",
+		AutoCreate:      true,
+		Normalize:       true,
+		Prefix:          "nn:",
 	}
 
 	network := neurolog.New(options)
@@ -42,32 +45,40 @@ func main() {
 		network.ObserveTrain(element.El1, element.El2)
 	}
 
+	network.Info()
+
 	//Testing data-set
 	for _, element := range testDataSet {
 		network.ObserveTest(element.El1, element.El2)
 	}
 	//Train
-	network.Train(0, 0, true, false)
-	for network.IsTraining() {
+	network.Train(0, 0, true, true)
+	for network.IsTraining() == true {
 		fmt.Println("Training...")
 		time.Sleep(1)
 	}
 
 	//Test
 	errors := 0
-	for _, element := range testDataSet {
-		output := network.Run(element.El1)
-		fmt.Sprintf("Neural Network calculation %s+%s = %s",
-			element.El1["number1"],
-			element.El1["number2"],
-			output["result"])
-		result, _ := strconv.ParseInt(output["result"], 10, 64)
-		if result != element.El2["result"] {
+	for _, pair := range testDataSet {
+		input := pair.El1
+		output:= pair.El2
+		networkOutput := network.Run(input)
+
+		s := fmt.Sprintf("Neural Network calculation %d + %d = %d",
+			input["number1"],
+			input["number2"],
+			int64(networkOutput["result"]))
+		fmt.Println(s)
+
+		result := int64(networkOutput["result"])
+		if result != output["result"] {
 			errors += 1
 		}
 	}
 
-	fmt.Sprintf("%s prediction errors on %s test items", errors, len(testDataSet))
+	s:=fmt.Sprintf("%s prediction errors on %s test items", errors, len(testDataSet))
+	fmt.Println(s)
 }
 
 func loadAdditionCsvData() []*Pair {
