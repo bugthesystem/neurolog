@@ -1,7 +1,6 @@
 package neurolog
 
 import (
-	"fmt"
 	"github.com/deckarep/golang-set"
 )
 
@@ -22,15 +21,11 @@ func _validate(array []string, dataToValidate map[string]int64, message string) 
 	set1 := mapset.NewSetFromSlice(keys)
 	set2 := mapset.NewSet()
 
-	for k := range array {
+	for _, k := range array {
 		set2.Add(k)
 	}
 
-	fmt.Println(set1)
-	fmt.Println(set2)
-
-	//TODO: fix set equality
-	//if !set1.Equal(set2) {
-	//	panic(message)
-	//}
+	if set1.Equal(set2) == false {
+		panic(message)
+	}
 }

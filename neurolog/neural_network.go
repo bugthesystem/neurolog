@@ -6,7 +6,10 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
+	"encoding/binary"
+	"math"
 )
 
 const (
@@ -16,8 +19,8 @@ const (
 
 //NeuralNetwork ... Neural-Redis interface
 type NeuralNetwork struct {
-	_opts  Options
-	_pool  *redis.Pool
+	_opts Options
+	_pool *redis.Pool
 }
 
 // Options ...
@@ -64,11 +67,9 @@ func (network NeuralNetwork) Info() map[string]string {
 	c := network._pool.Get()
 	defer c.Close()
 
-	fmt.Println(network._opts.Name)
 	cmdResult, err := c.Do("nr.info", network._opts.Name)
 	if err != nil {
-		fmt.Println(err)
-		//TODO: handle error return from c.Do or type conversion error.
+		log.Error(err)
 	}
 
 	result := map[string]string{}
@@ -77,8 +78,6 @@ func (network NeuralNetwork) Info() map[string]string {
 		for i := 0; i < len(resultArray); i += 2 {
 			result[toString(resultArray[i])] = toString(resultArray[i+1])
 		}
-	} else {
-		return map[string]string{}
 	}
 
 	return result
@@ -102,21 +101,20 @@ func (network NeuralNetwork) Classify(input map[string]int64) interface{} {
 
 	result, err := c.Do("nr.class", args...)
 	if err != nil {
-		fmt.Println(err)
-		//TODO: handle error return from c.Do or type conversion error.
+		log.Error(err)
 	}
 
 	if str, ok := result.(string); ok {
 		idx, _ := strconv.ParseInt(string(str), 10, 64)
 		return network._opts.Outputs[idx]
-	} else {
-		return nil
 	}
+
+	return map[string]int64{}
 
 }
 
 //Run ... Run the network returning a dict result
-func (network NeuralNetwork) Run(input map[string]int64) map[string]uint8 {
+func (network NeuralNetwork) Run(input map[string]int64) map[string]float64 {
 
 	_validateInput(network, input)
 
@@ -127,30 +125,30 @@ func (network NeuralNetwork) Run(input map[string]int64) map[string]uint8 {
 	}
 
 	fmt.Println(args)
+
 	c := network._pool.Get()
 	defer c.Close()
 
 	cmdResult, err := c.Do("nr.run", args...)
+	//It returns []uint8 array?
+	// I couldn't figure out how can I get float value, I have tried to get float64 from
+	// []uint8 using Float64frombytes method but I couldn't :(
+
 	if err != nil {
-		fmt.Println(err)
-		//TODO: handle error return from c.Do or type conversion error.
+		log.Error(err)
 	}
 
-	fmt.Println(cmdResult)
-
-	result := map[string]uint8{}
+	result := map[string]float64{}
 
 	if resultArray, ok := cmdResult.([]interface{}); ok {
 		for i := 0; i < len(network._opts.Outputs); i++ {
-			if values, ok := resultArray[i].(uint8); ok {
-				result[network._opts.Outputs[i]] = values
+			if values, ok := resultArray[i].([]uint8); ok {
+				result[network._opts.Outputs[i]] = Float64frombytes(values)
 			} else {
 				result[network._opts.Outputs[i]] = 0
 			}
 
 		}
-	} else {
-		return map[string]uint8{}
 	}
 
 	return result
@@ -198,6 +196,7 @@ func (network NeuralNetwork) _observe(input map[string]int64, output map[string]
 		args = append(args, clsType)
 
 	}
+
 	args = append(args, mode)
 
 	fmt.Println(args)
@@ -207,8 +206,7 @@ func (network NeuralNetwork) _observe(input map[string]int64, output map[string]
 
 	result, err := c.Do("nr.observe", args...)
 	if err != nil {
-		fmt.Println(err)
-		//TODO: handle error return from c.Do or type conversion error.
+		log.Error(err)
 	}
 
 	return result
@@ -221,12 +219,11 @@ func (network NeuralNetwork) IsCreated() bool {
 
 	result, err := c.Do("EXISTS", network._opts.Name)
 	if err != nil {
-		fmt.Println(err)
-		//TODO: handle error return from c.Do or type conversion error.
+		log.Error(err)
 	}
 
-	if flag, ok := result.(int64); ok {
-		return flag == 1
+	if parseResult, ok := result.(int64); ok {
+		return parseResult == 1
 	} else {
 		return false
 	}
@@ -237,6 +234,7 @@ func (network NeuralNetwork) IsCreated() bool {
 func (network NeuralNetwork) Create() int64 {
 
 	args := []interface{}{network._opts.Name, network._opts.Type, strconv.Itoa(len(network._opts.Inputs))}
+
 	for _, el := range network._opts.HiddenLayers {
 		args = append(args, el)
 	}
@@ -260,8 +258,7 @@ func (network NeuralNetwork) Create() int64 {
 
 	result, err := c.Do("nr.create", args...)
 	if err != nil {
-		fmt.Println(err)
-		//TODO: handle error return from c.Do or type conversion error.
+		log.Error(err)
 	}
 
 	fmt.Println(result)
@@ -280,13 +277,12 @@ func (network NeuralNetwork) Delete() {
 
 	result, err := c.Do("DEL", network._opts.Name)
 	if err != nil {
-		fmt.Println(err)
-		//TODO: handle error return from c.Do or type conversion error.
+		log.Error(err)
 	}
 	fmt.Println(result)
 }
 
-//ReCreate ... Recreate the neural network
+//Re-create ... Recreate the neural network
 func (network NeuralNetwork) ReCreate() {
 	network.Delete()
 	network.Create()
@@ -319,10 +315,9 @@ func (network NeuralNetwork) Train(maxCycles int, maxTime int, autoStop bool, ba
 
 	result, err := c.Do("nr.train", args...)
 	if err != nil {
-		fmt.Println(err)
-		//TODO: handle error return from c.Do or type conversion error.
+		log.Error(err)
 	}
-	fmt.Println(result)
+
 	return result
 }
 
