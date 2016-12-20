@@ -21,24 +21,6 @@ type NeuralNetwork struct {
 	_pool *redis.Pool
 }
 
-// Options ...
-type Options struct {
-	RedisHost       string
-	Password        string
-	Key             string
-	Name            string
-	Type            string
-	Inputs          []string
-	Outputs         []string
-	HiddenLayers    []int
-	DatasetSize     int
-	TestDatasetSize int
-	Normalize       bool
-	RedisClient     *redis.Pool
-	Prefix          string
-	AutoCreate      bool
-}
-
 // New ... Creates new neuralNetwork using options
 func New(opts Options) NeuralNetwork {
 	if opts.Prefix == "" {
