@@ -8,8 +8,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
-	"encoding/binary"
-	"math"
 )
 
 const (
