@@ -3,8 +3,6 @@ package neurolog
 import (
 	"fmt"
 	"strconv"
-	"encoding/binary"
-	"math"
 )
 
 func toString(item interface{}) string {
@@ -17,10 +15,4 @@ func toString(item interface{}) string {
 			return fmt.Sprintf("%v", item)
 		}
 	}
-}
-
-func Float64frombytes(bytes []uint8) float64 {
-	bits := binary.BigEndian.Uint64(bytes)
-	float := math.Float64frombits(bits)
-	return float
 }

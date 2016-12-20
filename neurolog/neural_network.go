@@ -110,9 +110,6 @@ func (network NeuralNetwork) Run(input map[string]int64) map[string]float64 {
 	defer c.Close()
 
 	cmdResult, err := c.Do("nr.run", args...)
-	//It returns []uint8 array?
-	// I couldn't figure out how can I get float value, I have tried to get float64 from
-	// []uint8 using Float64frombytes method but I couldn't :(
 
 	if err != nil {
 		log.Error(err)
@@ -123,7 +120,8 @@ func (network NeuralNetwork) Run(input map[string]int64) map[string]float64 {
 	if resultArray, ok := cmdResult.([]interface{}); ok {
 		for i := 0; i < len(network._opts.Outputs); i++ {
 			if values, ok := resultArray[i].([]uint8); ok {
-				result[network._opts.Outputs[i]] = Float64frombytes(values)
+				floatValue, _ := strconv.ParseFloat(string(values[:]), 64)
+				result[network._opts.Outputs[i]] = floatValue
 			} else {
 				result[network._opts.Outputs[i]] = 0
 			}

@@ -56,10 +56,10 @@ func addition(sampleFilePath string) {
 		output := pair.Output
 		networkOutput := network.Run(input)
 
-		s := fmt.Sprintf("Neural Network calculation %d + %d = %d",
+		s := fmt.Sprintf("Neural Network calculation %d + %d = %f",
 			input["number1"],
 			input["number2"],
-			int64(networkOutput["result"]))
+			networkOutput["result"])
 		fmt.Println(s)
 
 		result := int64(networkOutput["result"])
