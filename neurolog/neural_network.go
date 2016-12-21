@@ -44,10 +44,7 @@ func New(opts Options) NeuralNetwork {
 
 //Info ... Returns Redis internal info about the neural network
 func (network NeuralNetwork) Info() map[string]string {
-	c := network._pool.Get()
-	defer c.Close()
-
-	cmdResult, err := c.Do("nr.info", network._opts.Name)
+	cmdResult, err := _exec(network, "nr.info", network._opts.Name)
 	if err != nil {
 		log.Error(err)
 	}
@@ -74,12 +71,7 @@ func (network NeuralNetwork) Classify(input map[string]int64) interface{} {
 		args = append(args, input[key])
 	}
 
-	fmt.Println(args)
-
-	c := network._pool.Get()
-	defer c.Close()
-
-	result, err := c.Do("nr.class", args...)
+	result, err := _exec(network, "nr.class", args)
 	if err != nil {
 		log.Error(err)
 	}
@@ -104,12 +96,7 @@ func (network NeuralNetwork) Run(input map[string]int64) map[string]float64 {
 		args = append(args, input[key])
 	}
 
-	fmt.Println(args)
-
-	c := network._pool.Get()
-	defer c.Close()
-
-	cmdResult, err := c.Do("nr.run", args...)
+	cmdResult, err := _exec(network, "nr.run", args)
 
 	if err != nil {
 		log.Error(err)
@@ -177,12 +164,7 @@ func (network NeuralNetwork) _observe(input map[string]int64, output map[string]
 
 	args = append(args, mode)
 
-	fmt.Println(args)
-
-	c := network._pool.Get()
-	defer c.Close()
-
-	result, err := c.Do("nr.observe", args...)
+	result, err := _exec(network, "nr.observe", args)
 	if err != nil {
 		log.Error(err)
 	}
@@ -192,10 +174,7 @@ func (network NeuralNetwork) _observe(input map[string]int64, output map[string]
 
 //IsCreated ... Returns true if the neural network is created
 func (network NeuralNetwork) IsCreated() bool {
-	c := network._pool.Get()
-	defer c.Close()
-
-	result, err := c.Do("EXISTS", network._opts.Name)
+	result, err := _exec(network, "EXISTS", network._opts.Name)
 	if err != nil {
 		log.Error(err)
 	}
@@ -229,12 +208,7 @@ func (network NeuralNetwork) Create() int64 {
 	args = append(args, "TEST")
 	args = append(args, network._opts.TestDatasetSize)
 
-	fmt.Println(args)
-
-	c := network._pool.Get()
-	defer c.Close()
-
-	result, err := c.Do("nr.create", args...)
+	result, err := _exec(network, "nr.create", args)
 	if err != nil {
 		log.Error(err)
 	}
@@ -250,10 +224,7 @@ func (network NeuralNetwork) Create() int64 {
 
 //Delete ...  Delete the neural network
 func (network NeuralNetwork) Delete() {
-	c := network._pool.Get()
-	defer c.Close()
-
-	result, err := c.Do("DEL", network._opts.Name)
+	result, err := _exec(network, "DEL", network._opts.Name)
 	if err != nil {
 		log.Error(err)
 	}
@@ -288,10 +259,7 @@ func (network NeuralNetwork) Train(maxCycles int, maxTime int, autoStop bool, ba
 		args = append(args, "BACKTRACK")
 	}
 
-	c := network._pool.Get()
-	defer c.Close()
-
-	result, err := c.Do("nr.train", args...)
+	result, err := _exec(network, "nr.train", args)
 	if err != nil {
 		log.Error(err)
 	}
@@ -309,10 +277,24 @@ func initRedisConnPool(neuralNetwork *NeuralNetwork, opts Options) {
 		panic("Missing redis `host`")
 	}
 
-	neuralNetwork._pool = newPool(opts)
+	neuralNetwork._pool = _newPool(opts)
 }
 
-func newPool(opts Options) *redis.Pool {
+func _exec(network NeuralNetwork, command string, args interface{}) (interface{}, error) {
+	c := network._pool.Get()
+	defer c.Close()
+
+	fmt.Println(args)
+
+	if argsArray, ok := args.([]interface{}); ok {
+		return c.Do(command, argsArray...)
+
+	} else {
+		return c.Do(command, args)
+	}
+}
+
+func _newPool(opts Options) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:   redisPoolMaxIdle,
 		MaxActive: redisPoolMaxActive,

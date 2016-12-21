@@ -68,6 +68,6 @@ func addition(sampleFilePath string) {
 		}
 	}
 
-	s := fmt.Sprintf("%s prediction errors on %s test items", errors, len(testDataSet))
+	s := fmt.Sprintf("%d prediction errors on %d test items", errors, len(testDataSet))
 	fmt.Println(s)
 }
