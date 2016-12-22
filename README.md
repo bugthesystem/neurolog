@@ -48,7 +48,7 @@ func main() {
 
 	network := neurolog.New(options)
 
-    network.ObserveTrain(map[string]int64{"number1":1, "number2":1}, map[string]int64{"result":2})
+    network.ObserveTrain(map[string]int64{"number1":3, "number2":5}, map[string]int64{"result":8})
     
     network.Train(0,0,true,true)
     
@@ -58,7 +58,6 @@ func main() {
     }
     
     fmt.Println(network.Run(map[string]int64{"number1":1, "number2":2}))
-
 }
 
 
