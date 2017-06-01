@@ -1,0 +1,21 @@
+hash: 049fb4c86f996ac4eb2d2fce9fc204f771c9a2b3b21366ccec88a49c80d8dc9f
+updated: 2017-06-01T14:19:50.825928131+02:00
+imports:
+- name: github.com/deckarep/golang-set
+  version: fc8930a5e645572ee00bf66358ed3414f3c13b90
+- name: github.com/garyburd/redigo
+  version: 433969511232c397de61b1442f9fd49ec06ae9ba
+  subpackages:
+  - internal
+  - redis
+- name: github.com/Sirupsen/logrus
+  version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
+- name: github.com/ziyasal/neurolog
+  version: bf6b05ca0528966d379aaf81116c17f90fe1afe3
+  subpackages:
+  - neurolog
+- name: golang.org/x/sys
+  version: b90f89a1e7a9c1f6b918820b3daa7f08488c8594
+  subpackages:
+  - unix
+testImports: []
